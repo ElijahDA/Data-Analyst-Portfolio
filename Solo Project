@@ -1,0 +1,152 @@
+-- The following is my Solo Project where I created all three tables from scratch to practice joins between them--
+Create Table Characters (id INTEGER PRIMARY KEY,
+    Name TEXT,
+    Genre TEXT,
+    Archetype TEXT);
+    
+INSERT INTO Characters (Name, Genre, Archetype)
+    VALUES ("Naruto", "shonen", "Hero");
+INSERT INTO Characters (Name, Genre, Archetype)
+    VALUES ("Kakashi", "shonen", "Hero");
+ INSERT INTO Characters (Name, Genre, Archetype)
+    VALUES ("Pain", "shonen", "Antihero");
+INSERT INTO Characters (Name, Genre, Archetype)
+    VALUES ("Killua", "shonen", "Hero");
+INSERT INTO Characters (Name, Genre, Archetype)
+    VALUES ("Hisoka", "shonen", "Antihero");
+INSERT INTO Characters (Name, Genre, Archetype)
+    VALUES ("Neferpito", "shonen", "Villain");
+INSERT INTO Characters (Name, Genre, Archetype)
+    VALUES ("Guts", "Seinen", "Hero");
+INSERT INTO Characters (Name, Genre, Archetype)
+    VALUES ("Griffith", "Seinen", "Villain");
+INSERT INTO Characters (Name, Genre, Archetype)
+    VALUES ("Casca", "Seinen", "Hero");
+INSERT INTO Characters (Name, Genre, Archetype)
+    VALUES ("Kaneki", "Seinen", "Antihero");
+INSERT INTO Characters (Name, Genre, Archetype)
+    VALUES ("Rize", "Seinen", "Villain");
+ INSERT INTO Characters (Name, Genre, Archetype)
+    VALUES ("Yakumo", "Seinen", "Villain");
+    
+Create Table attributes ( id INTEGER PRIMARY KEY,
+    character_id INTEGER,
+    hair TEXT,
+    scars TEXT,
+    anime TEXT,
+    age TEXT);
+INSERT INTO attributes (character_id, hair , scars, anime, age)
+    VALUES ("1", "Yellow", "Yes", "Naruto", "15");
+INSERT INTO attributes (character_id, hair , scars, anime, age)
+    VALUES ("2", "White", "Yes", "Naruto", "23");
+INSERT INTO attributes (character_id, hair , scars, anime, age)
+    VALUES ("3", "Red", "Yes", "Naruto", "26");
+INSERT INTO attributes (character_id, hair , scars, anime, age)
+    VALUES ("4", "White", "No", "HunterXHunter", "12");
+INSERT INTO attributes (character_id, hair , scars, anime, age)
+    VALUES ("5", "Red", "No", "HunterXHunter", "23");
+INSERT INTO attributes (character_id, hair , scars, anime, age)
+    VALUES ("6", "White", "Yes", "HunterXHunter", "5");
+INSERT INTO attributes (character_id, hair , scars, anime, age)
+    VALUES ("7", "Black", "Yes", "Berzerk", "22");
+INSERT INTO attributes (character_id, hair , scars, anime, age)
+    VALUES ("8", "White", "No", "Berzerk", "26");
+INSERT INTO attributes (character_id, hair , scars, anime, age)
+    VALUES ("9", "Black", "Yes", "Berzerk", "19");
+INSERT INTO attributes (character_id, hair , scars, anime, age)
+    VALUES ("10", "White", "Yes", "Tokyo Ghoul", "15");
+INSERT INTO attributes (character_id, hair , scars, anime, age)
+    VALUES ("11", "Purple", "No", "Tokyo Ghoul", "26");
+INSERT INTO attributes (character_id, hair , scars, anime, age)
+    VALUES ("12", "Yellow", "Yes", "Tokyo Ghoul", "32");
+
+Create Table Anime (id INTEGER PRIMARY KEY,
+    character_id INTEGER,
+    anime_id INTEGER,
+    genre_id INTEGER,
+    character_score INTEGER);
+    
+ INSERT INTO Anime (character_id, anime_id, genre_id, character_score)
+    VALUES ("1", "1", "1","7");
+ INSERT INTO Anime (character_id, anime_id, genre_id, character_score)
+    VALUES ("2", "1", "1", "10");
+ INSERT INTO Anime (character_id, anime_id, genre_id, character_score)
+    VALUES ("3", "1", "1", "9");
+ INSERT INTO Anime (character_id, anime_id, genre_id, character_score)
+    VALUES ("4", "2", "1", "10");
+ INSERT INTO Anime (character_id, anime_id, genre_id, character_score)
+    VALUES ("5", "2", "1", "5");
+ INSERT INTO Anime (character_id, anime_id, genre_id, character_score)
+    VALUES ("6", "2", "1", "1");
+ INSERT INTO Anime (character_id, anime_id, genre_id, character_score)
+    VALUES ("7", "3", "2", "8");
+ INSERT INTO Anime (character_id, anime_id, genre_id, character_score)
+    VALUES ("8", "3", "2", "5");
+ INSERT INTO Anime (character_id, anime_id, genre_id, character_score)
+    VALUES ("9", "3", "2", "1");
+ INSERT INTO Anime (character_id, anime_id, genre_id, character_score)
+    VALUES ("10", "4", "2", "6");
+ INSERT INTO Anime (character_id, anime_id, genre_id, character_score)
+    VALUES ("11", "4", "2", "8");
+ INSERT INTO Anime (character_id, anime_id, genre_id, character_score)
+    VALUES ("12", "4", "2", "3");
+    
+    Select *
+    From Characters;
+    
+    Select *
+    From attributes;
+
+-- Give me the names and archetype of all characters with white hair--
+
+Select Name, Archetype
+From Characters C
+Join attributes A
+on hair="White"
+Where c.id=a.character_id;
+
+-- Give me the name, attributes, and character score off all characters--
+
+Select c.name, a.hair, a.scars, a.anime, a.age, Anime.character_score as Score
+From characters c
+Join attributes a
+on c.id= a.character_id
+Join Anime
+on c.id=Anime.character_id;
+
+--Order the avereage character score of each anime from greatest to least--
+
+Select at.anime as Anime, Round(Avg(a.character_score)) as Average_Character_Score
+From Anime a
+    Join attributes at
+On a.character_id=at.character_id
+    Join Characters c
+Group By a.anime_id
+Order By Round(Avg(a.character_score)) desc;
+
+--Which anime has the youngest average character age--
+
+Select at.anime, Round(Avg(at.age)) as Average_Age
+From attributes at
+Join Anime a
+On at.character_id=a.character_id
+Group by a.anime_id
+Order by Average_Age;
+
+--Who is the youngest character with a scar?--
+
+Select c.Name, Min(at.age)
+From Characters c
+Join attributes at
+On c.id=at.character_id
+Where at.scars="Yes";
+
+--What are the character scores and names, of characters that have a hair color other than black and white?--
+
+Select c.name, a.character_score
+From Characters c
+Join attributes at
+on c.id=at.character_id
+Join Anime a
+On at.character_id=a.character_id
+Where at.hair !="White" and at.hair!="Black";
