@@ -1,8 +1,21 @@
+--In this SQL, I'm querying a data base with multiple tables in it to Quantify Statitics about customer and order data --
+
+#1. How many orders were placed in January? 
+
+SELECT COUNT(orderid)
+FROM BIT_DB.JanSales
+WHERE length(orderid) = 6 
+AND orderid <> 'Order ID'
+
+#2. How many of those orders were for an iPhone? 
+
 SELECT COUNT(orderid)
 FROM BIT_DB.JanSales
 WHERE length(orderid) = 6
 AND orderid <> 'Order ID'
 AND Product ="iPhone";
+
+#3. Select the customer account numbers for all the orders that were placed in February. 
 
 Select acctnum
 From customers c
@@ -11,23 +24,27 @@ On c.order_id=f.orderid
 Where length(orderid) = 6
 AND orderid <> 'Order ID';
 
+#4. Which product was the cheapest one sold in January, and what was the price? 
+
 Select distinct product, price
 From JanSales 
 Order by price asc
 Limit 1;
 
-Select Distinct Product, (Sum(price)) as Revenue
-From JanSales
-Group By Product;
+#5. What is the total revenue for each product sold in January?
 
 Select Sum(quantity)*price as Total_Revenue, Product
 From JanSales
 Group By Product;
 
+#6. Which products were sold in February at 548 Lincoln St, Seattle, WA 98101, how many of each were sold, and what was the total revenue?
+
 Select Product, Quantity, Sum(Quantity)*Price as Revenue
 From FebSales
 Where location='548 Lincoln St, Seattle, WA 98101'
 Group by Product;
+
+#7. How many customers ordered more than 2 products at a time, and what was the average amount spent for those customers? 
 
 Select Count(acctnum), avg(quantity)*price
 From customers c
@@ -36,3 +53,12 @@ ON c.order_id=f.orderID
 Where Quantity > 2
 AND length(orderid) = 6
 AND orderid <> 'Order ID';
+
+-- List all the products sold in Los Angeles in Feb, and incclude how many of each were sold --
+
+Select Product, Sum(Quantity)
+From FebSales
+Where location like '%Los Angeles%'
+And length(orderID)=6
+And orderID <> 'Order ID'
+Group by Product;
