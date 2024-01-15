@@ -1,0 +1,21 @@
+-- Using a CTE Give the names of all streets with an average safety rating greater than 4, and classify those as a "Safe Lane"--
+With avg_s as (
+    Select Street, avg(safetyrating) as 'Safety'
+    From CityBikeLanes C
+    Group by Street )
+Select Street, Safety, 'Safe Lane' as Class
+From avg_s
+Where Safety>=4
+Group by Street
+Order by Safety desc;
+
+-- Using a Partition by Statement Give a list of all the bike lanes, both safety ratings for each lane, the avg safety rating for each lane, and a label with recommendation as "Remove", "Leave As-is", or "improvements needed".
+With Plans as (
+Select Street, Safetyrating, Avg(safetyrating) Over (Partition by Street) as "Avg_Safety" 
+From CityBikeLanes C1 )
+Select *,
+    Case
+     When Avg_Safety >=4 Then 'Leave as Is'
+     When Avg_Safety <2.5 Then 'Remove'
+     Else 'Improvements Neede' End as 'Plans'
+From Plans;
