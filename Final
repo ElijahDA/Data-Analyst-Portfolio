@@ -1,0 +1,180 @@
+-- Show Customers (their full names, customer ID, and country) who are not in the US--
+
+Select CustomerID, FirstName, LastName, Country
+From chinook.Customers
+Where Country <> "USA";
+
+--Show only the Customers from Brazil.--
+Select *
+From chinook.customers
+Where Country = "Brazil";
+
+--Find the Invoices of customers who are from Brazil. The resulting table should show the customer's full name, Invoice ID, Date of the invoice, and billing country--
+Select Customerid, Invoiceid, FirstName, Lastname,InvoiceDate, Country
+From chinook.customers c
+Join chinook.invoices i
+ON c.customerid=i.Invoiceid
+Where c.country= 'Brazil';
+
+--Show the Employees who are Sales Agents.--
+Select*
+From chinook.employees;
+
+Select Lastname, Firstname, Title
+From chinook.employees
+Where Title like '%Sales%Agent%';
+
+--Find a unique/distinct list of billing countries from the Invoice table--
+Select Distinct BillingCountry
+From chinook.invoices
+Order by BillingCountry;
+
+--Provide a query that shows the  invoices associated with each sales agent. The resulting table should include the Sales Agent's full name.--
+
+Select e.FirstName, e.Lastname, InvoiceId
+From chinook.employees e
+Join chinook.customers c
+on e.employeeid = c.supportRepId
+Join chinook.invoices i
+on c.customerId= i.customerId
+Order by e.employeeid;
+
+--Show the Invoice Total, Customer name, Country, and Sales Agent name for all invoices and customers.--
+
+With Invoice_Total as (
+    Select Sum(Quantity)*UnitPrice as Total, InvoiceId
+    From invoice_items 
+    Group by InvoiceId)
+
+Select i.invoiceId,
+       c.FirstName ||' '|| c.LastName as CustomerName,
+       c.Country,
+       e.FirstName ||' '|| e.LastName as SalesAgentName,
+       it.Total as InvoiceTotal
+From invoices i
+Join Invoice_Total it on i.invoiceId=it.InvoiceId
+Join customers c on i.customerId=c.customerId
+Join employees e on c.SupportRepId= e.employeeId
+Order by i.InvoiceId;
+
+
+
+--How many Invoices were there in 2009?--
+
+Select Count(invoiceId)
+From Chinook.invoices
+Where invoiceDate like '%2009%';
+
+-- What are the total sales for 2009--
+
+Select Sum(Quantity*UnitPrice) as TotalSales
+From chinook.invoice_items it
+Join chinook.invoices i
+On i.InvoiceId=it.invoiceId
+where strftime('%Y', i.invoiceDate)='2009';
+
+--Write a query that includes the purchased track name with each invoice line ID.--
+Select t.Name as Track_Name, it.InvoiceLineId
+From chinook.tracks t 
+    Join chinook.invoice_items it
+        on it.TrackId=t.TrackId;
+        
+--Write a query that includes the purchased track name AND artist name with each invoice line ID--
+Select t.Name as Track_Name, artists.Name as Artist_Name, it.InvoiceLineId
+From chinook.tracks t
+    Join chinook.albums a 
+        on a.AlbumId=t.albumid
+    Join chinook.artists
+        on artists.ArtistId=a.ArtistId
+    Join chinook.invoice_items it
+        on it.TrackId=t.TrackId;
+
+--Provide a query that shows all the Tracks, and include the Album name, Media type, and Genre.--
+
+Select t.Name as TrackName, a.Title as AlbumTitle, g.Name as GenreName, mt.Name as MediaTypeName
+From chinook.tracks t
+Join chinook.albums a
+    ON t.AlbumId=a.AlbumId
+Join chinook.genres g
+    on g.GenreId=t.GenreID
+Join chinook.media_types mt
+    on mt.MediaTypeId=t.MediaTypeId;
+    
+--Show the total sales made by each sales agent--
+Select Distinct e.FirstName ||' '|| e.LastName as SalesAgent,
+Sum(it.Quantity*it.UnitPrice) Over (Partition by e.employeeId) as Total_Sales 
+From chinook.employees e
+    Join chinook.customers c
+        on e.employeeID=c.SupportRepId
+    Join chinook.invoices i
+        on c.CustomerId=i.CustomerId
+    Join chinook.invoice_items it
+        on i.InvoiceId=it.InvoiceId
+Order by Total_Sales desc;
+
+--Which sales agent made the most dollars in sales in 2009?--
+
+Select e.FirstName ||' '|| e.LastName as SalesAgent,
+Sum(it.Quantity*it.UnitPrice) as Total_Sales 
+From chinook.employees e
+    Join chinook.customers c
+        on e.employeeID=c.SupportRepId
+    Join chinook.invoices i
+        on c.CustomerId=i.CustomerId
+    Join chinook.invoice_items it
+        on i.InvoiceId=it.InvoiceId
+Where strftime('%Y', i.InvoiceDate)='2009'
+Group by e.EmployeeId
+Order by Total_Sales desc
+Limit 1;
+
+--List all albums, how many tracks each album sold, and total revenue each album brought in from most to least--
+Select a.Title as AlbumName, Sum(it.Quantity) as Total_Track_Sold, Round(Sum(it.Quantity*it.UnitPrice),2) as Revenue
+From chinook.Tracks t
+    Join chinook.albums a ON a.AlbumId=t.AlbumId
+    Join chinook.invoice_items it on it.trackId=t.TrackId
+Group by a.Title
+Order by Revenue desc;
+
+--What are the top 3 Countries outside the US thaht bought the most tracks and how many did they buy?--
+
+Select Distinct i.BillingCountry as CountryName, Sum(it.Quantity) over (Partition by i.BillingCountry) as Total_Sold
+From chinook.invoices i
+Join chinook.invoice_items it
+    ON i.InvoiceId=it.InvoiceId
+Where CountryName <> 'USA'
+Order by Total_Sold desc
+Limit 3;
+
+--Order the albums from most tracks to least--
+Select a.Title, Count(t.TrackId) as Total_Tracks
+From tracks t
+Join albums a on t.AlbumId=a.AlbumId
+Group by a.Title
+Order by Total_Tracks desc;
+
+--How many complete albums defining each track of an album was sold to an indivudual customer--
+
+With 
+AlbumTrackCount as (
+    Select AlbumId, Count(TrackId) as TotalTracks
+    From Tracks
+    Group by AlbumId),
+    
+CustomersAlbumPurchases as (
+    Select it.InvoiceId, i.CustomerId, t.AlbumId, Count(Distinct t.trackId) as TracksPurchased
+    From invoice_items it
+        Join tracks t on t.TrackId=it.TrackId
+        Join invoices i on i.InvoiceId=it.InvoiceId
+    Group by i.CustomerId, t.AlbumId, it.InvoiceId),
+    
+CompleteAlbumSales as (
+    Select CustomerId, cap.AlbumId
+        From CustomersAlbumPurchases cap
+        Join AlbumTrackCount atc On cap.AlbumId=atc.AlbumId
+    Where cap.TracksPurchased=atc.TotalTracks)
+Select a.Title, Count(*) as CompleteAlbumsSold
+From CompleteAlbumSales cas
+    Join albums a on cas.AlbumId=a.AlbumId
+    Join customers c on c.CustomerId=cas.CustomerId
+Group by a.Title;
